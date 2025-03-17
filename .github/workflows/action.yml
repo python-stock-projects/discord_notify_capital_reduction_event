@@ -23,6 +23,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
+      - name: Ensure sent_announcements.json exists
+        run: |
+          if [ ! -f sent_announcements.json ]; then echo "[]" > sent_announcements.json; fi
+
       - name: Run the script
         run: |
-          python run.py   # 將 'run.py' 換成你要執行的程式檔案名稱
+          python run.py   # 執行你的 Python 檔案
