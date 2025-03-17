@@ -1,7 +1,4 @@
-import schedule
-import time
-import threading
-import signal
+
 import sys
 import requests
 
@@ -35,17 +32,6 @@ def job():
     if msg:
         notify_discord_webhook(msg)
 
-# 設定每10分鐘檢查一次公告並廣播
-schedule.every(10).minutes.do(job)
-
-
-def run_schedule():
-    while True:
-        try:
-            schedule.run_pending()
-        except Exception as e:
-            print(f"Error running scheduled job: {e}")
-        time.sleep(1)
 
 def signal_handler(sig, frame):
     global running
@@ -57,12 +43,3 @@ if __name__ == "__main__":
 
     job()  # 立即執行一次
     
-    # 設定停止信號處理
-    signal.signal(signal.SIGINT, signal_handler)
-
-    # 初始化 running 變數
-    running = True
-
-    # 啟動定時任務的背景執行緒
-    schedule_thread = threading.Thread(target=run_schedule)
-    schedule_thread.start()
