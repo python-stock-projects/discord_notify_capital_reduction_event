@@ -23,16 +23,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Ensure sent_announcements.json exists
-        run: |
-          if [ ! -f sent_announcements.json ]; then echo "[]" > sent_announcements.json; fi
-
       - name: Run the script
         run: |
-          python get_new_capital_reduction_announcement.py   # 執行你的 Python 檔案
-
-      - name: Upload sent_announcements.json
-        uses: actions/upload-artifact@v3
-        with:
-          name: sent_announcements
-          path: sent_announcements.json
+          python run.py   # 執行你的 Python 檔案

@@ -12,22 +12,35 @@ announcement_url = "https://mopsov.twse.com.tw/mops/web/ezsearch_query"
 
 # 紀錄已發送的公告檔案路徑
 sent_announcements_file = "sent_announcements.json"
+# 紀錄上次檢查日期的檔案路徑
+last_checked_date_file = "last_checked_date.txt"
 
 def load_sent_announcements():
     if os.path.exists(sent_announcements_file):
         with open(sent_announcements_file, "r", encoding="utf-8") as file:
-            return set(json.load(file))
+            content = file.read().strip()
+            if content:
+                return set(json.loads(content))
     return set()
 
-def save_sent_announcements():
+def save_sent_announcements(sent_announcements):
     with open(sent_announcements_file, "w", encoding="utf-8") as file:
         json.dump(list(sent_announcements), file, ensure_ascii=False, indent=4)
 
+def load_last_checked_date():
+    if os.path.exists(last_checked_date_file):
+        with open(last_checked_date_file, "r", encoding="utf-8") as file:
+            return file.read().strip()
+    return None
+
+def save_last_checked_date(date):
+    with open(last_checked_date_file, "w", encoding="utf-8") as file:
+        file.write(date)
+
 # 紀錄已發送的公告
 sent_announcements = load_sent_announcements()
-
 # 紀錄上次檢查日期
-last_checked_date = datetime.now().strftime('%Y%m%d')
+last_checked_date = load_last_checked_date()
 
 def get_sii_announcement():
 
@@ -72,11 +85,12 @@ def check_new_announcements():
     global last_checked_date
     today = datetime.now().strftime('%Y%m%d')
     
-    # 如果跨日，清空 sent_announcements 並更新檔案
-    if today != last_checked_date:
+    # 如果跨日，清空 sent_announcements 並更新 last_checked_date
+    if last_checked_date is None or today != last_checked_date:
         sent_announcements.clear()
-        save_sent_announcements()  # 清空檔案內容
+        save_sent_announcements(sent_announcements)
         last_checked_date = today
+        save_last_checked_date(today)
 
     sii_response_dict = get_sii_announcement()
     otc_response_dict = get_otc_announcement()
@@ -103,7 +117,7 @@ def check_new_announcements():
         for announcement in new_announcements:
             announcement_details = f"{announcement['CDATE']}\n{announcement['COMPANY_ID']}{announcement['COMPANY_NAME']}\n{announcement['SUBJECT']}\n{announcement['HYPERLINK']}"
             print(announcement_details)
-        save_sent_announcements()  # 儲存已發送的公告
+        save_sent_announcements(sent_announcements)  # 儲存已發送的公告
     else:
         print("沒有新的公告")
 
