@@ -12,12 +12,10 @@ announcement_url = "https://mopsov.twse.com.tw/mops/web/ezsearch_query"
 
 
 def get_sii_announcement():
-
     today = datetime.now().strftime('%Y%m%d')
 
     # 上市公司公告參數
-    announcement_body =  f'step=00&RADIO_CM=1&TYPEK=sii&CO_MARKET=&CO_ID=&PRO_ITEM=&SUBJECT=%E6%B8%9B%E8%B3%87&SDATE={today}&EDATE=&lang=TW&AN='
-    #announcement_body =  f'step=00&RADIO_CM=1&TYPEK=sii&CO_MARKET=&CO_ID=&PRO_ITEM=&SUBJECT=%E8%BD%89%E6%8F%9B%E5%85%AC%E5%8F%B8%E5%82%B5&SDATE=20241125&EDATE=&lang=TW&AN='
+    announcement_body = f'step=00&RADIO_CM=1&TYPEK=sii&CO_MARKET=&CO_ID=&PRO_ITEM=&SUBJECT=%E6%B8%9B%E8%B3%87&SDATE={today}&EDATE=&lang=TW&AN='
 
     # 取得公告資訊
     response = requests.post(announcement_url, data=announcement_body)
@@ -42,10 +40,17 @@ def get_sii_announcement():
                 day = cdate_parts[2]
                 converted_cdate = f"{year}-{month}-{day}"
 
-                # 組合 'CDATE' 和 'CTIME' 成 full_time
-                full_time = datetime.strptime(f"{converted_cdate} {announcement['CTIME']}", '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-                print(f"SII full_time = {full_time}")
-                if full_time >= one_hour_ago:
+                # 組合 'CDATE' 和 'CTIME' 成 full_time（台灣時間）
+                full_time_taiwan = datetime.strptime(f"{converted_cdate} {announcement['CTIME']}", '%Y-%m-%d %H:%M:%S')
+
+                # 將台灣時間轉換為 UTC 時間並添加時區資訊
+                taiwan_offset = timedelta(hours=8)
+                full_time_utc = (full_time_taiwan - taiwan_offset).replace(tzinfo=timezone.utc)
+
+                print(f"SII full_time_taiwan = {full_time_taiwan}")
+                print(f"SII full_time_utc = {full_time_utc}")
+
+                if full_time_utc >= one_hour_ago:
                     filtered_data.append(announcement)
                     print(f"一小時內的SII announcement = {announcement}")
             except ValueError as e:
@@ -57,17 +62,15 @@ def get_sii_announcement():
         return response_dict
     return {"data": [], "message": ["查無公告資料"], "status": "fail"}
 
-def get_otc_announcement():
 
+def get_otc_announcement():
     today = datetime.now().strftime('%Y%m%d')
 
     # 上市公司公告參數
-    announcement_body =  f'step=00&RADIO_CM=1&TYPEK=otc&CO_MARKET=&CO_ID=&PRO_ITEM=&SUBJECT=%E6%B8%9B%E8%B3%87&SDATE={today}&EDATE=&lang=TW&AN='
-    #announcement_body =  f'step=00&RADIO_CM=1&TYPEK=otc&CO_MARKET=&CO_ID=&PRO_ITEM=&SUBJECT=%E8%BD%89%E6%8F%9B%E5%85%AC%E5%8F%B8%E5%82%B5&SDATE=20241125&EDATE=&lang=TW&AN='
+    announcement_body = f'step=00&RADIO_CM=1&TYPEK=otc&CO_MARKET=&CO_ID=&PRO_ITEM=&SUBJECT=%E6%B8%9B%E8%B3%87&SDATE={today}&EDATE=&lang=TW&AN='
 
     # 取得公告資訊
     response = requests.post(announcement_url, data=announcement_body)
-    
 
     if response.status_code == 200:
         # 移除 UTF-8 BOM
@@ -89,10 +92,17 @@ def get_otc_announcement():
                 day = cdate_parts[2]
                 converted_cdate = f"{year}-{month}-{day}"
 
-                # 組合 'CDATE' 和 'CTIME' 成 full_time
-                full_time = datetime.strptime(f"{converted_cdate} {announcement['CTIME']}", '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-                print(f"OTC full_time = {full_time}")
-                if full_time >= one_hour_ago:
+                # 組合 'CDATE' 和 'CTIME' 成 full_time（台灣時間）
+                full_time_taiwan = datetime.strptime(f"{converted_cdate} {announcement['CTIME']}", '%Y-%m-%d %H:%M:%S')
+
+                # 將台灣時間轉換為 UTC 時間並添加時區資訊
+                taiwan_offset = timedelta(hours=8)
+                full_time_utc = (full_time_taiwan - taiwan_offset).replace(tzinfo=timezone.utc)
+
+                print(f"OTC full_time_taiwan = {full_time_taiwan}")
+                print(f"OTC full_time_utc = {full_time_utc}")
+
+                if full_time_utc >= one_hour_ago:
                     filtered_data.append(announcement)
                     print(f"一小時內的OTC announcement = {announcement}")
             except ValueError as e:
@@ -104,9 +114,8 @@ def get_otc_announcement():
         return response_dict
     return {"data": [], "message": ["查無公告資料"], "status": "fail"}
 
-def check_new_announcements():
-    
 
+def check_new_announcements():
     sii_response_dict = get_sii_announcement()
     otc_response_dict = get_otc_announcement()
 
@@ -124,8 +133,8 @@ def check_new_announcements():
 
     return new_announcements
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     check_new_announcements()
 
 
